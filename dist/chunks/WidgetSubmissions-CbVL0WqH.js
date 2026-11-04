@@ -16,7 +16,7 @@ function _() {
 			action: e("forms.manage") && /* @__PURE__ */ h(o, {
 				size: "sm",
 				icon: "plus",
-				onClick: () => t("/forms"),
+				onClick: () => t("/forms?do=new-form"),
 				children: r("New Form")
 			})
 		} : y?.latest.length === 0 && {
