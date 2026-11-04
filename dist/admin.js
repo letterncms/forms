@@ -141,10 +141,10 @@ function m({ field: e, value: t, onChange: n, disabled: r }) {
 }
 p(), t.fields.set("forms-label", m), t.widgets.set("forms-submissions", r(() => import("./chunks/WidgetSubmissions-reQLraLS.js"))), t.routes.set("/forms", {
 	path: "/forms",
-	component: r(() => import("./chunks/FormsScreen-DPFJcPKy.js")),
+	component: r(() => import("./chunks/FormsScreen-CPW4esVv.js")),
 	load: () => e("forms/list")
 }), t.routes.set("/forms/:handle", {
 	path: "/forms/:handle",
-	component: r(() => import("./chunks/FormBuilder-CkZXCVeG.js").then((e) => ({ default: e.FormBuilder }))),
+	component: r(() => import("./chunks/FormBuilder-mdwTxBip.js").then((e) => ({ default: e.FormBuilder }))),
 	load: ({ handle: t }) => e("forms/get", { handle: t })
 });

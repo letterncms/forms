@@ -205,7 +205,7 @@ var R = () => ({
 	icon: "search",
 	size: "sm",
 	placeholder: s("Search…"),
-	className: "w-56"
+	className: "w-full sm:w-56"
 }, {
 	handle: "status",
 	type: "select",
@@ -428,7 +428,7 @@ function W({ form: e }) {
 			toolbar: /* @__PURE__ */ P(M, { children: [/* @__PURE__ */ N(T, {
 				layout: "inline",
 				bare: !0,
-				className: "flex flex-wrap items-center gap-2",
+				className: "flex flex-wrap items-center gap-2 max-sm:w-full",
 				fields: z(),
 				values: {
 					search: d,
