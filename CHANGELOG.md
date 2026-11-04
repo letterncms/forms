@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.6.0 (2026-11-04)
+
+### Changed
+
+- **Breaking.** Needs the CMS 0.7, where Blocks, Email, Collaboration, Languages, MCP, Media and Navigation come with the CMS. Forms is on while Blocks is.
+
 ## 0.5.0 (2026-11-04)
 
 ### Added
