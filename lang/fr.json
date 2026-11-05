@@ -24,7 +24,6 @@
   "Archive": "Archiver",
   "Archived": "Archivées",
   "Autofill": "Saisie automatique",
-  "Back to Forms": "Retour aux formulaires",
   "Button Label": "Texte du bouton",
   "Checkbox": "Case à cocher",
   "Checkboxes": "Cases à cocher",
@@ -129,7 +128,6 @@
   "No submissions": "Aucune réponse",
   "No submissions yet": "Aucune réponse pour l’instant",
   "not equal to": "différent de",
-  "Not Found": "Introuvable",
   "Number": "Nombre",
   "Off": "Désactivé",
   "On": "Activé",
@@ -200,5 +198,6 @@
   "Webhook": "Webhook",
   "Webhooks must use https://.": "Les webhooks doivent utiliser https://.",
   "Website": "Site web",
+  "What visitors sent through forms.": "Ce que les visiteurs ont envoyé par formulaire.",
   "Where submissions go and how long they stay.": "Où vont les envois et combien de temps ils restent."
 }

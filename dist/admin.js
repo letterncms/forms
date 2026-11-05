@@ -139,4 +139,4 @@ function p({ field: e, value: t, onChange: n, disabled: r }) {
 		className: s("w-full min-w-0 bg-transparent outline-none", e.display === "heading" && "text-sm font-medium text-text placeholder:text-faint")
 	});
 }
-f(), e.fields.set("forms-label", p), e.widgets.set("forms-submissions", n(() => import("./chunks/WidgetSubmissions-CbVL0WqH.js"))), e.components.set("forms/builder", n(() => import("./chunks/FormBuilder-BfJJD1Ut.js"))), e.components.set("forms/submission", n(() => import("./chunks/Submission-4i_Dhaeh.js")));
+f(), e.fields.set("forms-label", p), e.widgets.set("forms-submissions", n(() => import("./chunks/WidgetSubmissions-CbVL0WqH.js"))), e.components.set("forms/builder", n(() => import("./chunks/FormBuilder-BfJJD1Ut.js"))), e.components.set("forms/submission", n(() => import("./chunks/Submission-Bf66Zn0u.js")));

@@ -2,11 +2,11 @@
     "name": "letterncms/forms",
     "description": "Form builder on the block editor, spam-protected submissions for static sites, notifications, confirmations, webhooks and an inbox.",
     "type": "cms-plugin",
-    "version": "0.7.0",
+    "version": "0.8.0",
     "license": "MIT",
     "require": {
         "php": "^8.4",
-        "letterncms/cms": ">=0.8 <1"
+        "letterncms/cms": ">=0.9 <1"
     },
     "autoload": {
         "psr-4": {
@@ -18,12 +18,21 @@
             "label": "Forms",
             "icon": "form",
             "provider": "Cms\\Forms\\FormsPlugin",
-            "provides": [
-                "forms"
-            ],
             "modules": [
                 "letterncms/blocks"
-            ]
+            ],
+            "sync": {
+                "groups": {
+                    "forms": {
+                        "label": "Form Submissions",
+                        "description": "What visitors sent through forms.",
+                        "tables": [
+                            "form_submissions"
+                        ],
+                        "push": false
+                    }
+                }
+            }
         }
     },
     "homepage": "https://github.com/letterncms/forms"
