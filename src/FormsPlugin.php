@@ -21,9 +21,11 @@ final class FormsPlugin extends Plugin
 {
     public function register(): void
     {
-        foreach ([FormRepository::class, FormRenderer::class, SubmissionHandler::class] as $service) {
+        foreach ([FormRepository::class, FormRenderer::class, SubmissionHandler::class, Captcha\Captchas::class] as $service) {
             $this->app->singleton($service);
         }
+
+        $this->app->bindIf(Captcha\Client::class, Captcha\HttpClient::class);
     }
 
     public function boot(): void
@@ -39,10 +41,13 @@ final class FormsPlugin extends Plugin
 
         // The pages showing a form recorded it while they were built: only those are built again, when the site builds on its own.
         $this->cms()->hooks()->on('form.saved', function (string $handle) {
-            if ($this->cms()->isActive('letterncms/site') && $this->cms()->settings('site', 'auto_build', true)) {
+            if ($this->cms()->isActive('letterncms/site') && $this->cms()->setting('site', 'auto_build', true)) {
                 $this->app->make(SiteBuilder::class)->queueForDependency('form:'.$handle, __('A form changed'));
             }
         });
+
+        // The widget and its site key are in the built pages: another provider or key builds them again.
+        $this->cms()->hooks()->addFilter('site.build.signature', fn (array $parts) => [...$parts, 'forms-captcha' => $this->app->make(Captcha\Captchas::class)->signature()]);
 
         $this->cms()->admin()->nav('forms', ['path' => '/forms', 'icon' => 'form', 'section' => 'content', 'order' => 75, 'pinned' => true, 'permission' => 'forms.view', 'badge' => fn () => Submission::query()->where('status', 'new')->count() ?: null]);
         $this->cms()->admin()->widget('forms-submissions', ['label' => 'Form Submissions', 'description' => __('New submissions over the last two weeks and the latest ones.'), 'icon' => 'form', 'column' => 'side', 'order' => 40, 'permission' => 'forms.view']);
@@ -123,9 +128,12 @@ final class FormsPlugin extends Plugin
     private function settingsSchema(): void
     {
         $this->cms()->settingsRegistry()->register('forms', fields: [
-            ['handle' => 'endpoint', 'type' => 'url', 'label' => 'Submission Address', 'placeholder' => 'https://cms.example.com', 'instructions' => 'Only when the site is hosted elsewhere.'],
-            ['handle' => 'origins', 'type' => 'tags', 'label' => 'Other Allowed Websites', 'placeholder' => 'https://example.com', 'instructions' => 'Like https://example.com.'],
-            ['handle' => 'retention_days', 'type' => 'number', 'label' => 'Keep Submissions For', 'suffix' => 'days', 'min' => 0, 'instructions' => '0 keeps them forever.', 'default' => 0],
+            ['handle' => 'endpoint', 'type' => 'url', 'label' => 'Submission Address', 'placeholder' => 'https://cms.example.com'],
+            ['handle' => 'origins', 'type' => 'tags', 'label' => 'Other Allowed Websites', 'placeholder' => 'https://example.com'],
+            ['handle' => 'retention_days', 'type' => 'number', 'label' => 'Keep Submissions For', 'suffix' => 'days', 'min' => 0, 'placeholder' => 'Forever'],
+            ['handle' => 'captcha', 'type' => 'select', 'label' => 'CAPTCHA', 'default' => 'none', 'required' => true, 'options' => ['none' => __('None'), 'turnstile' => 'Cloudflare Turnstile', 'hcaptcha' => 'hCaptcha']],
+            ['handle' => 'captcha_site_key', 'type' => 'text', 'label' => 'Site Key', 'width' => 'half', 'mono' => true, 'if' => ['captcha' => ['turnstile', 'hcaptcha']]],
+            ['handle' => 'captcha_secret', 'type' => 'text', 'label' => 'Secret Key', 'width' => 'half', 'secret' => true, 'if' => ['captcha' => ['turnstile', 'hcaptcha']]],
         ], icon: 'form', description: __('Where submissions go and how long they stay.'), permission: 'forms.manage', order: 50, home: 'forms');
     }
 
@@ -297,6 +305,10 @@ final class FormsPlugin extends Plugin
             'permission' => 'forms.manage',
             'annotations' => ['destructive' => true],
             'input' => ['type' => 'object', 'properties' => ['handle' => ['type' => 'string']], 'required' => ['handle']],
+            // Deleting never refuses: a form that is not there is nothing to remove.
+            'dryRun' => fn (array $in): array => ($form = $forms()->find($in['handle'])) === null ? [] : [
+                ['action' => 'delete', 'type' => 'form', 'handle' => $form['handle'], 'title' => $form['title'], 'keeps' => ['submissions' => Submission::query()->where('form', $form['handle'])->count()]],
+            ],
             'handler' => function (array $in) use ($forms) {
                 $forms()->delete($in['handle']);
 
@@ -357,14 +369,18 @@ final class FormsPlugin extends Plugin
             'handler' => fn (array $in) => ['updated' => Submission::query()->whereIn('id', array_map('strtolower', $in['ids']))->update(['status' => $in['status'], 'updated_at' => now()])],
         ]);
 
+        $doomed = static fn (array $in) => Submission::query()->whereIn('id', array_map('strtolower', $in['ids']))->get();
+
         $a->register('forms/submission-delete', [
             'label' => 'Delete Submissions',
             'description' => 'Permanently delete submissions and their files.',
             'permission' => 'forms.manage',
             'annotations' => ['destructive' => true],
             'input' => ['type' => 'object', 'properties' => ['ids' => ['type' => 'array', 'items' => ['type' => 'string'], 'maxItems' => 500]], 'required' => ['ids']],
-            'handler' => function (array $in) {
-                $subs = Submission::query()->whereIn('id', array_map('strtolower', $in['ids']))->get();
+            // Ids that match nothing are passed over, in the real run too.
+            'dryRun' => fn (array $in): array => $doomed($in)->map(static fn (Submission $s) => ['action' => 'delete', 'type' => 'submission', 'id' => $s->id, 'form' => $s->form, 'removes' => ['files' => is_dir(storage_path('app/forms/'.$s->id))]])->all(),
+            'handler' => function (array $in) use ($doomed) {
+                $subs = $doomed($in);
 
                 foreach ($subs as $s) {
                     \Cms\Support\Files::deleteDirectory(storage_path('app/forms/'.$s->id));
@@ -391,7 +407,7 @@ final class FormsPlugin extends Plugin
 
         // Retention: prune old submissions now and then.
         $this->app->terminating(function () {
-            $days = (int) $this->cms()->settings('forms', 'retention_days', 0);
+            $days = (int) $this->cms()->setting('forms', 'retention_days', 0);
 
             if ($days > 0 && random_int(1, 50) === 1) {
                 try {
