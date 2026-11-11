@@ -76,14 +76,14 @@ function d({ node: e, onSettings: n }) {
 				children: h.map((e, t) => /* @__PURE__ */ l("div", {
 					className: "flex items-center gap-2 text-sm text-muted",
 					children: [
-						/* @__PURE__ */ c("span", { className: s("size-3.5 border border-border-strong", f === "radio" ? "rounded-full" : "rounded-[3px]") }),
+						/* @__PURE__ */ c("span", { className: s("size-3.5 border border-border-strong", f === "radio" ? "rounded-full" : "rounded-xs") }),
 						" ",
 						e
 					]
 				}, t))
 			}) : f === "checkbox" || f === "consent" ? /* @__PURE__ */ l("div", {
 				className: "flex items-start gap-2 text-sm",
-				children: [/* @__PURE__ */ c("span", { className: "mt-0.5 size-3.5 shrink-0 rounded-[3px] border border-border-strong" }), f === "consent" ? /* @__PURE__ */ c("span", {
+				children: [/* @__PURE__ */ c("span", { className: "mt-0.5 size-3.5 shrink-0 rounded-xs border border-border-strong" }), f === "consent" ? /* @__PURE__ */ c("span", {
 					className: "text-muted",
 					dangerouslySetInnerHTML: { __html: String(p.text ?? "") }
 				}) : /* @__PURE__ */ c(a, {
@@ -139,4 +139,4 @@ function p({ field: e, value: t, onChange: n, disabled: r }) {
 		className: s("w-full min-w-0 bg-transparent outline-none", e.display === "heading" && "text-sm font-medium text-text placeholder:text-faint")
 	});
 }
-f(), e.fields.set("forms-label", p), e.widgets.set("forms-submissions", n(() => import("./chunks/WidgetSubmissions-CbVL0WqH.js"))), e.components.set("forms/builder", n(() => import("./chunks/FormBuilder-BfJJD1Ut.js"))), e.components.set("forms/submission", n(() => import("./chunks/Submission-Bf66Zn0u.js")));
+f(), e.fields.set("forms-label", p), e.widgets.set("forms-submissions", n(() => import("./chunks/WidgetSubmissions-DcrKdjjR.js"))), e.components.set("forms/builder", n(() => import("./chunks/FormBuilder-Dve_8wYg.js"))), e.components.set("forms/submission", n(() => import("./chunks/Submission-CoCAgAU_.js")));

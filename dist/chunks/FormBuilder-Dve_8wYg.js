@@ -31,7 +31,7 @@ function y({ form: i }) {
 				handle: i.handle,
 				fields: O.current
 			});
-			y.current = e.fields, x(!1), t("forms/");
+			y.current = e.fields, x(!1), t("forms/", "form-words/", "form-submissions/");
 		} catch (e) {
 			T(e instanceof Error ? e.message : String(e));
 		} finally {

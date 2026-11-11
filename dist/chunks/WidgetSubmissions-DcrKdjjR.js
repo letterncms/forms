@@ -3,7 +3,7 @@ import { Button as o, Icon as s, Sparkline as c, Stat as l, Widget as u, WidgetR
 import { Fragment as m, jsx as h, jsxs as g } from "react/jsx-runtime";
 // admin/src/WidgetSubmissions.tsx
 function _() {
-	let _ = a("forms/activity", { limit: 4 }, { refetchInterval: 6e4 }), y = _.data, b = y ? v(y.days.slice(7)) : 0, x = y ? v(y.days.slice(0, 7)) : 0;
+	let _ = a("forms/overview", { limit: 4 }, { refetchInterval: 6e4 }), y = _.data, b = y ? v(y.days.slice(7)) : 0, x = y ? v(y.days.slice(0, 7)) : 0;
 	return /* @__PURE__ */ h(u, {
 		action: {
 			label: r("All Forms"),

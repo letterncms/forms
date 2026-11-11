@@ -10,16 +10,19 @@ var g = (e) => ({
 	archived: r("Archived")
 })[e];
 function _({ props: _, close: v }) {
-	let y = i("forms/submission", { id: _.id }, { refetchOnWindowFocus: !1 }), b = y.data;
+	let y = i("form-submissions/get", { id: _.id }, { refetchOnWindowFocus: !1 }), b = y.data;
 	a(() => {
-		b && e("forms/submissions", "forms/list", "forms/activity");
+		b?.status === "new" && n("form-submissions/update", {
+			ids: [b.id],
+			status: "read"
+		}).then(() => e("form-submissions/", "forms/list", "forms/overview")).catch(() => {});
 	}, [b?.id]);
 	let x = async (t) => {
 		try {
-			await n("forms/submission-update", {
+			await n("form-submissions/update", {
 				ids: [_.id],
 				status: t
-			}), e("forms/"), v?.();
+			}), e("forms/", "form-submissions/"), v?.();
 		} catch (e) {
 			f.error(e);
 		}
