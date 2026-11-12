@@ -32,7 +32,7 @@ final class FormsViews
 
     private function list(): array
     {
-        // The one way to make a form, once: in the header, also while the list is empty.
+        // The one way to make a form: in the header, and in the list's place while there is none.
         $new = ['label' => __('New Form'), 'name' => 'new-form', 'icon' => 'plus', 'variant' => 'primary', 'ability' => 'forms/create', 'input' => ['title' => '{values.title}'], 'then' => 'open', 'to' => '/forms/{result.handle}',
             'form' => ['title' => __('New Form'), 'confirm' => __('Create Form'), 'fields' => [
                 ['handle' => 'title', 'type' => 'text', 'label' => __('Name'), 'placeholder' => __('Quote Request'), 'required' => true, 'autofocus' => true],
@@ -40,16 +40,16 @@ final class FormsViews
 
         return ['type' => 'ui/page', 'props' => ['title' => __('Forms'), 'icon' => 'form'], 'children' => [
             ['type' => 'ui/tabs', 'children' => [
-                ['type' => 'ui/tab', 'props' => ['id' => 'forms', 'label' => __('Forms'), 'actions' => [$new]], 'children' => [
+                ['type' => 'ui/tab', 'props' => ['id' => 'forms', 'label' => __('All Forms'), 'actions' => [$new]], 'children' => [
                     ['type' => 'ui/records', 'props' => [
                         'id' => 'forms', 'label' => __('Forms'), 'key' => 'handle',
                         'source' => ['ability' => 'forms/list'],
                         'columns' => [
                             ['key' => 'title', 'label' => __('Name'), 'icon' => 'icon'],
                             ['key' => 'enabled', 'label' => __('Status'), 'width' => '120px', 'format' => 'status', 'labels' => ['true' => __('On'), 'false' => __('Off')], 'tones' => ['true' => 'success', 'false' => 'neutral']],
-                            ['key' => 'fields', 'label' => __('Fields'), 'width' => '90px', 'align' => 'end', 'format' => 'number'],
-                            ['key' => 'total', 'label' => __('Submissions'), 'width' => '120px', 'align' => 'end', 'format' => 'number'],
-                            ['key' => 'unread', 'label' => __('Unread'), 'width' => '90px', 'align' => 'end', 'format' => 'badge'],
+                            ['key' => 'fields', 'label' => __('Fields'), 'width' => '90px', 'align' => 'end', 'format' => 'number', 'unit' => ['one' => __('{count} Field'), 'other' => __('{count} Fields')]],
+                            ['key' => 'total', 'label' => __('Submissions'), 'width' => '120px', 'align' => 'end', 'format' => 'number', 'unit' => ['one' => __('{count} Submission'), 'other' => __('{count} Submissions')]],
+                            ['key' => 'unread', 'label' => __('Unread'), 'width' => '90px', 'align' => 'end', 'format' => 'badge', 'unit' => ['one' => __('{count} Unread'), 'other' => __('{count} Unread')]],
                         ],
                         'open' => ['label' => __('Open'), 'to' => '/forms/{row.handle}'],
                         'actions' => [
@@ -57,7 +57,8 @@ final class FormsViews
                             ['label' => __('Submissions'), 'icon' => 'inbox', 'to' => '/forms/{row.handle}?tab=submissions'],
                             ['label' => __('Settings'), 'icon' => 'settings', 'to' => '/forms/{row.handle}?tab=options'],
                         ],
-                        'empty' => ['icon' => 'form', 'title' => __('No forms yet')],
+                        // The header's button stays the page's one primary, and the one `?do=new-form` opens.
+                        'empty' => ['icon' => 'form', 'title' => __('No forms yet'), 'action' => array_diff_key($new, ['variant' => true, 'name' => true])],
                     ]],
                 ]],
             ]],
@@ -94,10 +95,10 @@ final class FormsViews
         ]], 'children' => [$this->submissions($form)]];
 
         // Renaming and deleting the form are at hand on every tab, as its name is.
-        return ['type' => 'ui/page', 'props' => ['title' => $form['title'], 'icon' => 'form', 'width' => 'default', 'back' => ['to' => '/forms', 'label' => __('Forms')], 'actions' => [
+        return ['type' => 'ui/page', 'props' => ['title' => $form['title'], 'icon' => 'form', 'width' => 'narrow', 'back' => ['to' => '/forms', 'label' => __('Forms')], 'actions' => [
             ['label' => __('Rename'), 'icon' => 'edit', 'ability' => 'forms/save', 'input' => [...$input, 'title' => '{values.title}'],
                 'form' => ['title' => __('Rename Form'), 'confirm' => __('Rename'), 'values' => ['title' => $form['title']], 'fields' => [['handle' => 'title', 'type' => 'text', 'label' => __('Name'), 'required' => true, 'autofocus' => true]]]],
-            ['label' => __('Delete'), 'icon' => 'trash', 'variant' => 'ghost', 'ability' => 'forms/delete', 'input' => $input, 'then' => 'open', 'to' => '/forms',
+            ['label' => __('Delete'), 'icon' => 'trash', 'variant' => 'destructive', 'ability' => 'forms/delete', 'input' => $input, 'then' => 'open', 'to' => '/forms',
                 'confirm' => ['title' => __('Delete “:title”?', ['title' => $form['title']]), 'text' => __('Submissions are kept. Pages that embed it will show nothing.'), 'confirm' => __('Delete'), 'danger' => true]],
         ]], 'children' => [['type' => 'ui/tabs', 'children' => $tabs]]];
     }
@@ -129,7 +130,7 @@ final class FormsViews
                 ['label' => __('Delete'), 'ability' => 'form-submissions/delete', 'input' => ['ids' => '{ids}'],
                     'confirm' => ['title' => __('Delete the selected submissions?'), 'text' => __('{ids.length} selected. This cannot be undone.'), 'confirm' => __('Delete'), 'danger' => true]],
             ],
-            'empty' => ['icon' => 'inbox', 'title' => __('No submissions')],
+            'empty' => ['icon' => 'inbox', 'title' => __('No submissions yet')],
         ]];
     }
 
@@ -154,8 +155,11 @@ final class FormsViews
                 continue;
             }
 
-            $value = $values[$field['handle']] ?? null;
-            $sections[(string) ($field['section'] ?? '')][] = ['label' => $field['label'], 'value' => is_string($value) ? trim(strip_tags($value)) : $value, ...($field['type'] === 'toggle' ? ['format' => 'yesno'] : [])];
+            // A group of languages reads as one line each, named by both.
+            foreach ($field['type'] === 'group' ? $field['fields'] : [null] as $part) {
+                $value = $part === null ? ($values[$field['handle']] ?? null) : ($values[$field['handle']][$part['handle']] ?? null);
+                $sections[(string) ($field['section'] ?? '')][] = ['label' => $part === null ? $field['label'] : "{$field['label']} · {$part['label']}", 'value' => is_string($value) ? trim(strip_tags($value)) : $value, ...($field['type'] === 'toggle' ? ['format' => 'yesno'] : [])];
+            }
         }
 
         return array_map(static fn ($title, $items) => ['type' => 'ui/section', 'props' => $title === '' ? [] : ['title' => $title], 'children' => [['type' => 'ui/detail', 'props' => ['items' => array_slice($items, 0, 40)]]]], array_keys($sections), $sections);
@@ -183,36 +187,38 @@ final class FormsViews
         ];
     }
 
-    /** The form in the site's other languages, one section each, in the admin's language: empty fields fall back to the form's own wording. */
+    /**
+     * The form in the site's other languages, as every value in several languages reads: one group per word the
+     * form says (its button, a field's label), named in the admin's language, with a field for each language by
+     * the language's own name. An empty one falls back to the form's own wording, its placeholder.
+     */
     public function wordFields(array $form): array
     {
-        $locale = app('translator')->getLocale();
         $names = ['label' => __('Label'), 'help' => __('Help Text'), 'placeholder' => __('Placeholder'), 'options' => __('Options'), 'text' => __('Statement')];
         $settings = $form['settings'];
-        $fields = [];
+        $codes = array_values(array_diff($this->cms->locales(), [$this->cms->defaultLocale()]));
+        $group = static fn (string $handle, string $label, array $field, ?string $section = null) => ['handle' => $handle, 'type' => 'group', 'label' => $label, ...($section !== null ? ['section' => $section] : []),
+            'fields' => array_map(static fn (string $code) => ['handle' => $code, 'label' => Languages::name($code), ...$field], $codes)];
+        $fields = [
+            $group('s:submit', __('Button Label'), ['type' => 'text', 'placeholder' => $settings['submit']]),
+            $group('s:success', __('Success Message'), ['type' => 'textarea', 'placeholder' => $settings['success'], 'rows' => 2]),
+        ];
 
-        foreach (array_values(array_diff($this->cms->locales(), [$this->cms->defaultLocale()])) as $code) {
-            $section = Languages::name($code, $locale);
-            $fields[] = ['handle' => "{$code}:s:submit", 'type' => 'text', 'label' => __('Button Label'), 'placeholder' => $settings['submit'], 'section' => $section];
-            $fields[] = ['handle' => "{$code}:s:success", 'type' => 'textarea', 'label' => __('Success Message'), 'placeholder' => $settings['success'], 'rows' => 2, 'section' => $section];
+        if ($settings['confirmation']) {
+            $fields[] = $group('s:confirmation_subject', __('Confirmation Subject'), ['type' => 'text', 'placeholder' => $settings['confirmation_subject']]);
+            $fields[] = $group('s:confirmation_message', __('Confirmation Message'), ['type' => 'richtext']);
+        }
 
-            if ($settings['confirmation']) {
-                $fields[] = ['handle' => "{$code}:s:confirmation_subject", 'type' => 'text', 'label' => __('Confirmation Subject'), 'placeholder' => $settings['confirmation_subject'], 'section' => $section];
-                $fields[] = ['handle' => "{$code}:s:confirmation_message", 'type' => 'richtext', 'label' => __('Confirmation Message'), 'section' => $section];
+        foreach (FormFields::extract($form['fields']) as $field) {
+            if ($field['type'] === 'hidden') {
+                continue;
             }
 
-            foreach (FormFields::extract($form['fields']) as $field) {
-                if ($field['type'] === 'hidden') {
-                    continue;
-                }
+            $label = strip_tags((string) ($field['props']['label'] ?? $field['name']));
 
-                $label = strip_tags((string) ($field['props']['label'] ?? $field['name']));
-
-                foreach (FormRepository::FIELD_WORDS as $key) {
-                    if (is_string($field['props'][$key] ?? null) && $field['props'][$key] !== '') {
-                        $fields[] = ['handle' => "{$code}:f:{$field['name']}:{$key}", 'type' => $key === 'options' ? 'textarea' : 'text', 'label' => "{$label} · {$names[$key]}", 'placeholder' => $field['props'][$key], 'section' => $section,
-                            ...($key === 'options' ? ['instructions' => __('Keep each value: value|Label.')] : [])];
-                    }
+            foreach (FormRepository::FIELD_WORDS as $key) {
+                if (is_string($field['props'][$key] ?? null) && $field['props'][$key] !== '') {
+                    $fields[] = $group("f:{$field['name']}:{$key}", "{$label} · {$names[$key]}", ['type' => $key === 'options' ? 'textarea' : 'text', 'placeholder' => $field['props'][$key]], __('Fields'));
                 }
             }
         }
@@ -220,19 +226,19 @@ final class FormsViews
         return $fields;
     }
 
-    /** A form's translations as one value per field of the Languages tab. */
+    /** A form's translations as the Languages tab holds them: by what is said ("s:submit", "f:name:label"), then by language. */
     public static function words(array $locales): array
     {
         $out = [];
 
         foreach ($locales as $code => $words) {
             foreach ((array) ($words['settings'] ?? []) as $key => $value) {
-                $out["{$code}:s:{$key}"] = $value;
+                $out["s:{$key}"][$code] = $value;
             }
 
             foreach ((array) ($words['fields'] ?? []) as $name => $props) {
                 foreach ((array) $props as $key => $value) {
-                    $out["{$code}:f:{$name}:{$key}"] = $value;
+                    $out["f:{$name}:{$key}"][$code] = $value;
                 }
             }
         }
@@ -240,27 +246,33 @@ final class FormsViews
         return $out;
     }
 
-    /** The Languages tab's values as a form's translations; languages it doesn't show keep theirs. */
+    /**
+     * The stored translations with the tab's values in them: `{"s:submit": {"de": "Senden"}}`, a language left
+     * empty dropping out. Every language the values name is replaced as a whole, the others are kept.
+     */
     public static function locales(array $words, array $current): array
     {
         $out = [];
+        $shown = [];
 
-        foreach ($words as $handle => $value) {
+        foreach ($words as $handle => $byLanguage) {
             $parts = explode(':', (string) $handle);
 
-            if (! is_string($value) || $value === '') {
-                continue;
-            }
+            foreach ((array) $byLanguage as $code => $value) {
+                $shown[$code] = true;
 
-            if (count($parts) === 3 && $parts[1] === 's') {
-                $out[$parts[0]]['settings'][$parts[2]] = $value;
-            } elseif (count($parts) === 4 && $parts[1] === 'f') {
-                $out[$parts[0]]['fields'][$parts[2]][$parts[3]] = $value;
+                if (! is_string($value) || $value === '') {
+                    continue;
+                }
+
+                if (count($parts) === 2 && $parts[0] === 's') {
+                    $out[$code]['settings'][$parts[1]] = $value;
+                } elseif (count($parts) === 3 && $parts[0] === 'f') {
+                    $out[$code]['fields'][$parts[1]][$parts[2]] = $value;
+                }
             }
         }
 
-        $shown = array_unique(array_map(static fn ($h) => explode(':', (string) $h)[0], array_keys($words)));
-
-        return [...array_diff_key($current, array_flip($shown)), ...$out];
+        return [...array_diff_key($current, $shown), ...$out];
     }
 }

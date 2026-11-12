@@ -40,6 +40,17 @@ final class FormsPlugin extends Plugin
         $this->settingsSchema();
         $this->abilities();
 
+        // What the Audit Log calls each change, once it has happened.
+        $this->cms()->hooks()->addFilter('audit.past', static fn (array $past): array => $past + [
+            'forms/create' => __('Created Form'),
+            'forms/save' => __('Saved Form'),
+            'forms/delete' => __('Deleted Form'),
+            'form-settings/update' => __('Updated Form Settings'),
+            'form-words/update' => __('Updated Form Wording'),
+            'form-submissions/update' => __('Updated Form Submissions'),
+            'form-submissions/delete' => __('Deleted Form Submissions'),
+        ]);
+
         // The pages showing a form recorded it while they were built: only those are built again, when the site builds on its own.
         $this->cms()->hooks()->on('form.saved', function (string $handle) {
             if ($this->cms()->isActive('letterncms/site') && $this->cms()->setting('site', 'auto_build', true)) {
@@ -49,6 +60,22 @@ final class FormsPlugin extends Plugin
 
         // The widget and its site key are in the built pages: another provider or key builds them again.
         $this->cms()->hooks()->addFilter('site.build.signature', fn (array $parts) => [...$parts, 'forms-captcha' => $this->app->make(Captcha\Captchas::class)->signature()]);
+
+        // The site's content security policy (core `site.policy`): the CAPTCHA's own hosts, and where a form sends a
+        // visitor without JavaScript after it is sent (its Redirect To, when that is another site).
+        $this->cms()->hooks()->addFilter('site.policy', function (array $policy) {
+            foreach ($this->app->make(Captcha\Captchas::class)->current()?->sources() ?? [] as $directive => $sources) {
+                $policy[$directive] = [...($policy[$directive] ?? ["'self'"]), ...$sources];
+            }
+
+            foreach ($this->app->make(FormRepository::class)->all() as $form) {
+                if (is_string($form['settings']['redirect'] ?? null) && preg_match('~^https://[^/"\'\s?#]+~i', $form['settings']['redirect'], $m)) {
+                    $policy['form-action'] = [...($policy['form-action'] ?? ["'self'"]), strtolower($m[0])];
+                }
+            }
+
+            return $policy;
+        });
 
         $this->cms()->admin()->nav('forms', ['path' => '/forms', 'icon' => 'form', 'section' => 'content', 'order' => 75, 'pinned' => true, 'permission' => 'forms.view', 'badge' => fn () => Submission::query()->where('status', 'new')->count() ?: null]);
         $this->cms()->admin()->widget('forms-submissions', ['label' => 'Form Submissions', 'description' => __('New submissions over the last two weeks and the latest ones.'), 'icon' => 'form', 'column' => 'side', 'order' => 40, 'permission' => 'forms.view']);
@@ -108,7 +135,7 @@ final class FormsPlugin extends Plugin
             'keywords' => ['contact', 'form', 'signup', 'newsletter', 'quote'],
             'styles' => ['spacing', 'size', 'background', 'border'],
             // With no forms yet, its list says so and offers to make one.
-            'fields' => [['handle' => 'form', 'type' => 'select', 'label' => 'Form', 'placeholder' => 'Choose a Form', 'options' => [], 'dynamic' => 'forms', 'required' => true,
+            'fields' => [['handle' => 'form', 'type' => 'select', 'label' => 'Form', 'options' => [], 'dynamic' => 'forms', 'required' => true,
                 'empty' => 'No forms yet', 'action' => ['label' => 'New Form', 'icon' => 'plus', 'to' => '/forms?do=new-form']]],
             'render' => FieldView::form(...),
         ]);
@@ -170,7 +197,7 @@ final class FormsPlugin extends Plugin
             'meta' => ['page?' => Shape::STRING, 'locale?' => Shape::STRING_OR_NULL, 'user_agent?' => Shape::STRING],
             'status' => $status, 'createdAt' => Shape::STRING_OR_NULL, 'publishedAt' => Shape::STRING_OR_NULL, 'updatedAt' => Shape::STRING_OR_NULL,
         ];
-        $words = Shape::map(Shape::STRING);
+        $words = Shape::map(Shape::map(Shape::STRING));
 
         $a->register('forms/list', [
             'label' => 'List Forms',
@@ -308,7 +335,7 @@ final class FormsPlugin extends Plugin
 
         $a->register('form-words/get', [
             'label' => 'Get Form Wording',
-            'description' => 'What a form says to visitors in each of the site’s other languages: the fields to fill in, and their values, one per "<language>:s:<setting>" and "<language>:f:<field name>:<property>".',
+            'description' => 'What a form says to visitors in each of the site’s other languages: the fields to fill in, one group per thing said ("s:<setting>", "f:<field name>:<property>") with a field per language, and their values the same way: {"s:submit": {"de": "Senden"}}.',
             'permission' => 'forms.view',
             'annotations' => ['readOnly' => true],
             'expose' => ['mcp' => false],

@@ -2,6 +2,29 @@
 
 ## Unreleased
 
+## 0.14.0 (2026-11-12)
+
+### Added
+
+- The Audit Log names what Forms changed in the past tense, such as **Created Form** and **Deleted Form Submissions**.
+- With the site's content security policy on, a form's CAPTCHA (Turnstile or hCaptcha) loads and runs, and a form whose **Redirect To** is another site can lead there after it is sent without JavaScript: Forms names those hosts in the policy (`site.policy`).
+
+### Changed
+
+- A choice field's **Options** shows its format as a placeholder ("value|Label") instead of a sentence under it.
+- A form's editor sits in the one column every form-like page has, and its **Delete** is the red button the other editors have.
+- **Breaking.** A form's **Languages** tab is laid out as every value in several languages is: one group per thing the form says, its button or a field's label, with a field per language named in that language. `form-words/get` and `form-words/update` read and write `{"s:submit": {"de": "Senden"}}` instead of `"de:s:submit"` keys.
+- **Breaking.** Needs the core 0.26 or newer, whose views draw a red **Delete** (and, as 0.24 does, say which phone **Phone** means).
+- The first tab of the Forms screen is **All Forms**, so it no longer repeats the screen's name. With no forms yet, **New Form** is offered where the list would be.
+- On a phone, a form's row says what its numbers count: “6 Fields”, “128 Submissions”, “3 Unread”.
+- A dropdown's empty option reads **Choose** unless you give it other words, and the Form block's list reads **Choose** like every other select.
+- The form builder no longer carries a line of advice under the fields: the empty line already says to press “/”.
+
+### Fixed
+
+- In the form builder, a field's name and a hidden value are real buttons: they take the keyboard, show focus and are large enough to tap.
+- In German, the **Phone** field stays "Telefon" where the core now says "Smartphone" for a phone's screen, a slider's **Starts At** is its "Startwert", and **None** reads "Ohne", which fits whatever it stands beside.
+
 ## 0.13.0 (2026-11-11)
 
 ### Added
@@ -114,7 +137,6 @@
 - On a phone, the search box above submissions takes the full width.
 - Field blocks are in title case (**Short Text**, **Long Text**, **File Upload**, **Hidden Value**) with a few plain words each, and the Form block asks you to choose a form to show. Permissions are **View Form Submissions** and **Manage Forms**; the settings say less.
 - The Form block asks to **Choose a Form**; with no forms yet its list says so and offers **New Form**, which opens the new-form dialog. A form’s On or Off in the list is a dot, like every table’s status.
-
 
 ## 0.2.0 (2026-11-02)
 

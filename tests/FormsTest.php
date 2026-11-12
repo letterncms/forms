@@ -223,10 +223,16 @@ final class FormsTest extends TestCase
     public function test_the_forms_places_are_views(): void
     {
         $this->assertSame('ui/records', $this->place('forms')['children'][0]['children'][0]['children'][0]['type']);
-        // The one way to make a form is the tab's action in the bar: the empty list is a title, not a second button.
+        // The one way to make a form is the tab's action in the bar; an empty list is a title and that one action.
         $list = $this->place('forms')['children'][0]['children'][0];
         $this->assertSame('forms/create', $list['props']['actions'][0]['ability']);
-        $this->assertSame(['icon' => 'form', 'title' => 'No forms yet'], $list['children'][0]['props']['empty']);
+        $empty = $list['children'][0]['props']['empty'];
+        $this->assertSame(['icon', 'title', 'action'], array_keys($empty));
+        $this->assertSame(['No forms yet', 'New Form', 'forms/create'], [$empty['title'], $empty['action']['label'], $empty['action']['ability']]);
+        // The bar's button is the one primary on the page, and the one `?do=new-form` opens.
+        $this->assertSame(['primary', 'new-form'], [$list['props']['actions'][0]['variant'], $list['props']['actions'][0]['name']]);
+        $this->assertArrayNotHasKey('variant', $empty['action']);
+        $this->assertArrayNotHasKey('name', $empty['action']);
         $tabs = array_column(array_column($this->place('form', ['handle' => 'quote'])['children'][0]['children'], 'props'), 'id');
         $this->assertSame(count($this->cms()->locales()) > 1 ? ['fields', 'options', 'languages', 'submissions'] : ['fields', 'options', 'submissions'], $tabs);
         $this->assertSame('ui/empty', $this->place('form', ['handle' => 'gone'])['children'][0]['type']);
@@ -268,7 +274,7 @@ final class FormsTest extends TestCase
         $this->assertCount(3, $form['fields']);
 
         $this->assertSame('Sent!', $run('form-settings/update', ['handle' => 'quote', 'settings' => ['submit' => 'Sent!']])['submit']);
-        $this->assertSame(['de:s:submit' => 'Senden'], $run('form-words/update', ['handle' => 'quote', 'words' => ['de:s:submit' => 'Senden', 'de:f:name:label' => '']]));
+        $this->assertSame(['s:submit' => ['de' => 'Senden']], $run('form-words/update', ['handle' => 'quote', 'words' => ['s:submit' => ['de' => 'Senden'], 'f:name:label' => ['de' => '']]]));
         $run('forms/save', ['handle' => 'quote', 'title' => 'Quotes']);
 
         $quote = app(FormRepository::class)->find('quote');
@@ -337,9 +343,11 @@ final class FormsTest extends TestCase
         // Settings come back in the types they are said to have, whatever a form sent.
         $settings = $run('form-settings/update', ['handle' => 'bookings', 'settings' => ['redirect' => '', 'webhook' => null, 'enabled' => 0, 'submit' => null, 'min_seconds' => '5', 'notify' => ['ada@example.com', 'nobody']]]);
         $this->assertSame([null, null, false, '', 5, ['ada@example.com']], [$settings['redirect'], $settings['webhook'], $settings['enabled'], $settings['submit'], $settings['min_seconds'], $settings['notify']]);
-        $this->assertContains('de:s:submit', array_column($run('form-words/get', ['handle' => 'bookings'])['fields'], 'handle'));
-        $this->assertEquals((object) ['de:s:submit' => 'Buchen'], $run('form-words/update', ['handle' => 'bookings', 'words' => ['de:s:submit' => 'Buchen']]));
-        $this->assertEquals((object) ['de:s:submit' => 'Buchen'], $run('form-words/get', ['handle' => 'bookings'])['values']);
+        // A value in several languages as everywhere: the thing said, then a field per language by its own name.
+        $submit = array_values(array_filter($run('form-words/get', ['handle' => 'bookings'])['fields'], static fn ($f) => $f['handle'] === 's:submit'))[0];
+        $this->assertSame(['group', ['de'], ['Deutsch']], [$submit['type'], array_column($submit['fields'], 'handle'), array_column($submit['fields'], 'label')]);
+        $this->assertEquals(['s:submit' => ['de' => 'Buchen']], (array) $run('form-words/update', ['handle' => 'bookings', 'words' => ['s:submit' => ['de' => 'Buchen']]]));
+        $this->assertEquals(['s:submit' => ['de' => 'Buchen']], (array) $run('form-words/get', ['handle' => 'bookings'])['values']);
         $this->assertSame(['deleted' => 'bookings'], $run('forms/delete', ['handle' => 'bookings']));
 
         $this->assertSame([$s->id], array_column($run('form-submissions/list', ['form' => 'quote'])['items'], 'id'));
@@ -357,5 +365,17 @@ final class FormsTest extends TestCase
 
         $this->assertSame('Created Bookings', $view['children'][0]['props']['title']);
         $this->assertSame([['Open', '/forms/'.$form['handle']], ['Delete', null]], array_map(static fn ($a) => [$a['label'], $a['to'] ?? null], $view['children'][1]['props']['items']));
+    }
+
+    public function test_every_change_has_a_past_tense_label_for_the_audit_log(): void
+    {
+        $past = $this->cms()->hooks()->filter('audit.past', []);
+        $changes = array_filter($this->cms()->abilities()->all(), static fn ($ability) => $ability->package === 'letterncms/forms' && ! $ability->isReadOnly());
+
+        $this->assertNotSame([], $changes);
+
+        foreach ($changes as $name => $ability) {
+            $this->assertIsString($past[$name] ?? null, "{$name} has no past-tense label: add it to the audit.past filter.");
+        }
     }
 }

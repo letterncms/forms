@@ -19,7 +19,7 @@ final class FormFields
             ['handle' => 'help', 'type' => 'text', 'label' => 'Help Text'],
         ];
         $placeholder = ['handle' => 'placeholder', 'type' => 'text', 'label' => 'Placeholder'];
-        $options = ['handle' => 'options', 'type' => 'textarea', 'label' => 'Options', 'instructions' => 'One per line. Use value|Label to store a different value.', 'default' => "Option one\nOption two"];
+        $options = ['handle' => 'options', 'type' => 'textarea', 'label' => 'Options', 'placeholder' => "Option one\nvalue|Label", 'default' => "Option one\nOption two"];
         $look = ['handle' => 'look', 'type' => 'select', 'label' => 'Show As', 'display' => 'segmented', 'options' => ['list' => __('List'), 'chips' => __('Chips')], 'default' => 'list'];
         $condition = ['handle' => 'show_if', 'type' => 'group', 'label' => 'Only Show When', 'fields' => [
             ['handle' => 'field', 'type' => 'text', 'label' => 'Field Name', 'width' => 'third'],
@@ -30,12 +30,12 @@ final class FormFields
         $defs = [
             'text' => [__('Short Text'), __('One line of text'), 'text', [$placeholder, ['handle' => 'max', 'type' => 'number', 'label' => 'Max Length', 'default' => 200], ['handle' => 'autocomplete', 'type' => 'select', 'label' => 'Autofill', 'options' => ['off' => __('Off'), 'name' => __('Name'), 'given-name' => __('First name'), 'family-name' => __('Last name'), 'organization' => __('Company'), 'street-address' => __('Street address'), 'postal-code' => __('Postal code'), 'address-level2' => __('City'), 'country-name' => __('Country')]]]],
             'email' => [__('Email'), __('An email address'), 'mail', [$placeholder]],
-            'tel' => [__('Phone'), __('A phone number'), 'phone', [$placeholder]],
+            'tel' => [__('Phone||number'), __('A phone number'), 'phone', [$placeholder]],
             'url' => [__('Website'), __('A web address'), 'link', [$placeholder]],
             'number' => [__('Number'), __('A number'), 'number', [$placeholder, ['handle' => 'min', 'type' => 'number', 'label' => 'Minimum'], ['handle' => 'max', 'type' => 'number', 'label' => 'Maximum']]],
             'date' => [__('Date'), __('A date'), 'calendar', []],
             'textarea' => [__('Long Text'), __('Several lines of text'), 'paragraph', [$placeholder, ['handle' => 'rows', 'type' => 'number', 'label' => 'Rows', 'default' => 5], ['handle' => 'max', 'type' => 'number', 'label' => 'Max Length', 'default' => 5000]]],
-            'select' => [__('Dropdown'), __('One option from a list'), 'select', [$options, ['handle' => 'placeholder', 'type' => 'text', 'label' => 'Empty Option', 'default' => 'Choose…']]],
+            'select' => [__('Dropdown'), __('One option from a list'), 'select', [$options, ['handle' => 'placeholder', 'type' => 'text', 'label' => 'Empty Option', 'default' => 'Choose']]],
             'radio' => [__('Choice'), __('One option, all in view'), 'radio', [$options, $look]],
             'checkboxes' => [__('Checkboxes'), __('Any number of options'), 'checkbox', [$options, $look]],
             'checkbox' => [__('Checkbox'), __('A single yes or no'), 'checkbox', [['handle' => 'look', 'type' => 'select', 'label' => 'Show As', 'display' => 'segmented', 'options' => ['checkbox' => __('Checkbox'), 'switch' => __('Switch')], 'default' => 'checkbox']]],
