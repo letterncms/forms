@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.14.1 (2026-11-12)
+
+### Fixed
+
+- A choice field's **Options** tell agents again that they go one per line, as `value|Label` to store a different value.
+
 ## 0.14.0 (2026-11-12)
 
 ### Added
