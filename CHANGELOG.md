@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.19.0 (2026-11-16)
+
+### Changed
+
+- **Breaking.** Needs the core 0.48 or newer, where the lists of addresses to email and of other allowed websites use its **List** field.
+
 ## 0.18.2 (2026-11-16)
 
 ### Changed
