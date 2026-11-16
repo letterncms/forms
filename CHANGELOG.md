@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.18.1 (2026-11-16)
+
+### Changed
+
+- Forms is listed under Pinned in the sidebar.
+
 ## 0.18.0 (2026-11-14)
 
 ### Changed
